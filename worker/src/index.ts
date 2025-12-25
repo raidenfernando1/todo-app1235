@@ -2,7 +2,13 @@ import { Hono } from 'hono';
 import { poweredBy } from 'hono/powered-by';
 import { cors } from 'hono/cors';
 
-const entry = new Hono();
+import DBTest from './routes/test';
+
+export type Bindings = {
+	DB: D1Database;
+};
+
+const entry = new Hono<{ Bindings: Bindings }>();
 
 entry.use('*', cors());
 entry.use('*', poweredBy());
@@ -67,5 +73,7 @@ entry.get('/health', async (c) => {
 		status: 'ok',
 	});
 });
+
+entry.route('/test', DBTest);
 
 export default entry;
