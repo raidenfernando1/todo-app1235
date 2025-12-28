@@ -30,11 +30,15 @@
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "todo-app1235-db",
-			"database_id": "bb9aa54f-d054-431f-8fe2-6a423ddf628d",
+			"database_name": "[REDACTED]",
+			"database_id": "[REDACTED]",
 			"remote": true
 		}
-	]
+	],
+	"vars": {
+		"GOOGLE_CLIENT_ID": "[REDACTED]",
+		"GOOGLE_CLIENT_SECRET": "[REDACTED"
+	}
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/

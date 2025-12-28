@@ -1,12 +1,11 @@
 import { Hono } from 'hono';
 import { poweredBy } from 'hono/powered-by';
 import { cors } from 'hono/cors';
+import { Bindings } from './types';
+
+import Auth from './auth/login';
 
 import DBTest from './routes/test';
-
-export type Bindings = {
-	DB: D1Database;
-};
 
 const entry = new Hono<{ Bindings: Bindings }>();
 
@@ -67,6 +66,8 @@ Y8a.    .a8P   88     \`8b      88       88            88       88           88 
     </html>
   `)
 );
+
+entry.route('/auth', Auth);
 
 entry.get('/health', async (c) => {
 	return c.json({
