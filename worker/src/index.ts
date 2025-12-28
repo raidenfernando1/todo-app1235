@@ -5,8 +5,6 @@ import { Bindings } from './types';
 
 import Auth from './auth/login';
 
-import DBTest from './routes/test';
-
 const entry = new Hono<{ Bindings: Bindings }>();
 
 entry.use('*', cors());
@@ -74,7 +72,5 @@ entry.get('/health', async (c) => {
 		status: 'ok',
 	});
 });
-
-entry.route('/test', DBTest);
 
 export default entry;

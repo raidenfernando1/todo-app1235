@@ -1,6 +1,6 @@
 # Logs
 env.ts
-
+wrangler.jsonc
 
 logs
 _.log

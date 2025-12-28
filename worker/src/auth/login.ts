@@ -1,8 +1,18 @@
 import { googleAuth } from '@hono/oauth-providers/google';
 import { Hono } from 'hono';
 import { Bindings } from '../types';
+import { setSignedCookie } from 'hono/cookie';
 
 const Auth = new Hono<{ Bindings: Bindings }>();
+
+const generatedUserID = async ({ id, salt }: { id: string; salt: string }): Promise<string> => {
+	const encode = new TextEncoder();
+	const encodedUserID = encode.encode(id + salt);
+	const hash = await crypto.subtle.digest('SHA-256', encodedUserID);
+	return Array.from(new Uint8Array(hash))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+};
 
 Auth.use('/login', async (c, next) => {
 	try {
@@ -12,14 +22,12 @@ Auth.use('/login', async (c, next) => {
 			scope: ['openid', 'email', 'profile'],
 		})(c, next);
 	} catch (error) {
-		console.error('OAuth middleware error:', error);
 		return c.json({ error: 'Authentication failed' }, 401);
 	}
 });
 
 Auth.get('/login', async (c) => {
 	const token = c.get('token');
-	const grantedScopes = c.get('granted-scopes');
 	const user = c.get('user-google');
 
 	if (!user || !token) {
@@ -27,27 +35,46 @@ Auth.get('/login', async (c) => {
 	}
 
 	try {
-		const isExisting = await c.env.DB.prepare('SELECT * FROM users WHERE user_google_id = ?').bind(user.id).first();
+		const isExisting = await c.env.DB.prepare('SELECT * FROM users WHERE user_email = ?').bind(user.id).first();
 
 		if (!isExisting) {
-			const generatedUserID = crypto.randomUUID();
-
 			await c.env.DB.prepare('INSERT INTO users (user_id, user_email, user_google_id) VALUES (?, ?, ?)')
-				.bind(generatedUserID, user.email, user.id)
+				.bind(
+					await generatedUserID({
+						id: user.id as string,
+						salt: c.env.USER_DATA_HASHSALT as string,
+					}),
+					user.email,
+					user.id
+				)
 				.run();
 		}
 
-		return c.text('exists');
-	} catch (error) {
-		console.error('Database error:', error);
-		return c.json({ error: 'Failed to save user' }, 500);
-	}
+		const userData = {
+			email: user.email,
+			name: user.name,
+			isVerified: user.verified_email,
+		};
 
-	return c.json({
-		token,
-		grantedScopes,
-		user,
-	});
+		setSignedCookie(c, 'user_session', JSON.stringify(userData), c.env.COOKIE_SIGN_SECRET, {
+			httpOnly: true,
+			secure: true,
+			sameSite: 'Strict',
+			maxAge: 60 * 60 * 24 * 365,
+		});
+
+		return c.json({
+			success: true,
+			userData,
+		});
+	} catch (error) {
+		return c.json(
+			{
+				success: false,
+			},
+			500
+		);
+	}
 });
 
 export default Auth;
