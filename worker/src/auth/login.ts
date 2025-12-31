@@ -35,7 +35,7 @@ Auth.get('/login', async (c) => {
 	}
 
 	try {
-		const isExisting = await c.env.DB.prepare('SELECT * FROM users WHERE user_email = ?').bind(user.id).first();
+		const isExisting = await c.env.DB.prepare('SELECT * FROM users WHERE user_email = ?').bind(user.email).first();
 
 		if (!isExisting) {
 			await c.env.DB.prepare('INSERT INTO users (user_id, user_email, user_google_id) VALUES (?, ?, ?)')
@@ -60,7 +60,7 @@ Auth.get('/login', async (c) => {
 			httpOnly: true,
 			secure: true,
 			sameSite: 'Strict',
-			maxAge: 60 * 60 * 24 * 365,
+			maxAge: 60 * 10,
 		});
 
 		return c.json({
@@ -68,9 +68,22 @@ Auth.get('/login', async (c) => {
 			userData,
 		});
 	} catch (error) {
+		console.error(error);
+
+		if (error instanceof Error) {
+			return c.json(
+				{
+					success: false,
+					error: error.message,
+				},
+				500
+			);
+		}
+
 		return c.json(
 			{
 				success: false,
+				error: String(error),
 			},
 			500
 		);
