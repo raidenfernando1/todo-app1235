@@ -44,10 +44,13 @@ entry.get('/', (c) =>
             <p>todo-app1235 api layer | contact: raidenfernando2@gmail.com for more information</p>
             <hr/>
             <p>Publicly available list of usable commands</p>
-            <ul>
-              <li>/health for api health</li>
-              <li>/api for api data</li>
-            </ul>
+            <p>This is built using Cloudflare Workers and Hono for routing feel free to look at the code at <a href="https://github.com/raidenfernando1/todo-app1235">GITHUB</a> </p>
+			<ul>
+				<li>/health – Checks the service status and returns a basic health response to verify the API is running.</li>
+				<li>/api – Provides access to the main API endpoints and returns application data.</li>
+				<li>/auth – Handles authentication-related operations such as login, token management, and authorization.</li>
+				<li>/auth/login - For oauth google login its the only way to login in to the app and logging in here would also log you in the app itself.</li>
+			</ul>
           </div>
           <pre class="art">
   ,ad8888ba,   88888888ba       88  888888888888  888888888888  88888888888  88888888ba   
