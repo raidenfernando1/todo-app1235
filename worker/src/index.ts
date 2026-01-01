@@ -3,12 +3,32 @@ import { poweredBy } from 'hono/powered-by';
 import { cors } from 'hono/cors';
 import { Bindings } from './types';
 
+import { getSignedCookie, setSignedCookie } from 'hono/cookie';
+import { IDLE_TIME_REFRESH } from './auth/login';
+
 import Auth from './auth/login';
 
 const entry = new Hono<{ Bindings: Bindings }>();
 
 entry.use('*', cors());
 entry.use('*', poweredBy());
+
+entry.use('/api/*', async (c, next) => {
+	const session = await getSignedCookie(c, c.env.COOKIE_SIGN_SECRET, 'user_session');
+
+	if (!session || typeof session !== 'string') {
+		return c.json({ sucess: false, error: 'unauthorized' }, 401);
+	}
+
+	await setSignedCookie(c, 'user_session', session, c.env.COOKIE_SIGN_SECRET, {
+		httpOnly: true,
+		secure: true,
+		sameSite: 'Strict',
+		maxAge: IDLE_TIME_REFRESH,
+	});
+
+	await next();
+});
 
 entry.get('/', (c) =>
 	c.html(String.raw`
@@ -69,6 +89,12 @@ Y8a.    .a8P   88     \`8b      88       88            88       88           88 
 );
 
 entry.route('/auth', Auth);
+
+entry.get('/test', async (c) => {
+	const session = await getSignedCookie(c, c.env.COOKIE_SIGN_SECRET, 'user_session');
+
+	return c.json({ session: session });
+});
 
 entry.get('/health', async (c) => {
 	return c.json({

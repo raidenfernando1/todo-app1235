@@ -1,9 +1,12 @@
 import { googleAuth } from '@hono/oauth-providers/google';
 import { Hono } from 'hono';
 import { Bindings } from '../types';
-import { setSignedCookie } from 'hono/cookie';
+import { getSignedCookie, setSignedCookie } from 'hono/cookie';
 
 const Auth = new Hono<{ Bindings: Bindings }>();
+
+// export const IDLE_TIME_REFRESH = 14 * 24 * 60 * 60; // 2 weeks
+export const IDLE_TIME_REFRESH = 5 * 60; // 5 minutes
 
 const generatedUserID = async ({ id, salt }: { id: string; salt: string }): Promise<string> => {
 	const encode = new TextEncoder();
@@ -56,11 +59,11 @@ Auth.get('/login', async (c) => {
 			isVerified: user.verified_email,
 		};
 
-		setSignedCookie(c, 'user_session', JSON.stringify(userData), c.env.COOKIE_SIGN_SECRET, {
+		await setSignedCookie(c, 'user_session', JSON.stringify(userData), c.env.COOKIE_SIGN_SECRET, {
 			httpOnly: true,
 			secure: true,
 			sameSite: 'Strict',
-			maxAge: 60 * 10,
+			maxAge: IDLE_TIME_REFRESH,
 		});
 
 		return c.json({
@@ -68,22 +71,10 @@ Auth.get('/login', async (c) => {
 			userData,
 		});
 	} catch (error) {
-		console.error(error);
-
-		if (error instanceof Error) {
-			return c.json(
-				{
-					success: false,
-					error: error.message,
-				},
-				500
-			);
-		}
-
 		return c.json(
 			{
 				success: false,
-				error: String(error),
+				userData: {},
 			},
 			500
 		);
