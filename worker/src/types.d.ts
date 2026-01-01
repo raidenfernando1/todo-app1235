@@ -5,3 +5,10 @@ export type Bindings = {
 	GOOGLE_CLIENT_ID: string;
 	GOOGLE_CLIENT_SECRET: STRING;
 };
+
+export type USER_SESSION_TYPE = {
+	username: string;
+	user_email: string;
+	user_google_id: string;
+	user_id: string;
+};
