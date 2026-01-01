@@ -90,12 +90,6 @@ Y8a.    .a8P   88     \`8b      88       88            88       88           88 
 
 entry.route('/auth', Auth);
 
-entry.get('/test', async (c) => {
-	const session = await getSignedCookie(c, c.env.COOKIE_SIGN_SECRET, 'user_session');
-
-	return c.json({ session: session });
-});
-
 entry.get('/health', async (c) => {
 	return c.json({
 		status: 'ok',
